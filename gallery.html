@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Mickey Williamson</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ede3df; /* Main light beige background - matches p5 canvas */
+            color: #4c6121; /* Default text color - Olive Green */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        #p5-canvas-container { /* For Line Flow background */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1; 
+            overflow: hidden;
+        }
+
+        #p5-canvas-container canvas {
+            display: block;
+        }
+
+        .oswald-font {
+            font-family: 'Oswald', sans-serif;
+        }
+
+        /* Navigation styling (consistent with landing page) */
+        nav {
+            background-color: rgba(237, 227, 223, 0.85); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); 
+            border-bottom: 1px solid #d1c7c3; 
+        }
+        nav a.nav-brand {
+            color: #4c6121; 
+        }
+        nav a.nav-link {
+            color: #4c6121; /* Olive Green for nav links */
+            transition: color 0.3s ease;
+        }
+        nav a.nav-link.active { /* Style for the active gallery link */
+            color: #ac4500; /* Rust orange for active link */
+            font-weight: 700;
+        }
+        nav a.nav-link:not(.active):hover { /* Hover for non-active links */
+            color: #ac4500; /* Rusty Orange for ALL hover */
+        }
+        /* Removed: nav a.nav-link:nth-child(odd):not(.active):hover */
+        
+
+        /* Carousel Styling */
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px; /* Adjust max-width as needed */
+            margin: 2rem auto; /* Centering and spacing */
+            overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
+            background: rgba(255, 255, 255, 0.25); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(76, 97, 33, 0.2);
+            box-shadow: 0 8px 25px rgba(76, 97, 33, 0.12);
+        }
+        .carousel-slides {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+        .carousel-slide {
+            min-width: 100%;
+            box-sizing: border-box;
+        }
+        .carousel-slide img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 16 / 9; /* Common slideshow aspect ratio */
+            object-fit: cover;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(76, 97, 33, 0.5); /* Olive green, semi-transparent */
+            color: #ede3df; /* Light beige text */
+            border: none;
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            z-index: 10;
+            border-radius: 0.375rem; /* 6px */
+            font-size: 1.25rem;
+            transition: background-color 0.3s ease;
+        }
+        .carousel-button:hover {
+            background-color: rgba(59, 76, 26, 0.8); /* Darker olive on hover */
+        }
+        .carousel-prev {
+            left: 1rem;
+        }
+        .carousel-next {
+            right: 1rem;
+        }
+        .carousel-dots {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem; /* 8px */
+            z-index: 10;
+        }
+        .carousel-dot {
+            width: 0.75rem; /* 12px */
+            height: 0.75rem; /* 12px */
+            background-color: rgba(76, 97, 33, 0.4); /* Olive green, more transparent */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .carousel-dot.active {
+            background-color: #4c6121; /* Solid olive green */
+        }
+
+
+        /* Gallery Card Styling */
+        .gallery-card {
+            background: rgba(255, 255, 255, 0.35); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(76, 97, 33, 0.25);
+            box-shadow: 0 8px 25px rgba(76, 97, 33, 0.15);
+            color: #4c6121;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden; 
+        }
+        .gallery-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(76, 97, 33, 0.2);
+        }
+        .gallery-card img {
+            aspect-ratio: 16 / 10; 
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .gallery-card:hover img {
+            transform: scale(1.05);
+        }
+        .gallery-card-title {
+            color: #3b4c1a; 
+        }
+        .gallery-card-description {
+            color: #525f31; 
+        }
+
+        /* Section styling */
+        .page-section {
+            padding-top: 6rem; /* Account for fixed nav */
+            padding-bottom: 4rem;
+            position: relative; /* Ensure content is above fixed background */
+            z-index: 1;
+        }
+        .section-title {
+            color: #3b4c1a;
+        }
+
+        footer {
+            background-color: rgba(224, 217, 213, 0.75); /* #e0d9d5 with alpha */
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            position: relative; 
+            z-index: 1; /* Ensure footer is above canvas */
+            text-align: center; 
+        }
+        footer p {
+            color: #525f31; 
+        }
+
+    </style>
+</head>
+<body>
+    <div id="p5-canvas-container">
+        <div id="p5-canvas-placeholder"></div>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 p-4 z-50 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="index.html" class="oswald-font text-2xl font-bold nav-brand">MW</a>
+            <div class="space-x-4 text-sm md:text-base">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="gallery.html" class="nav-link active">Gallery</a>
+                <a href="index.html#games" class="nav-link">Games/Apps</a> 
+                <a href="index.html#about" class="nav-link">About</a>
+                <a href="#" class="nav-link">Shop</a> 
+                <a href="#" class="nav-link">Contact</a> 
+            </div>
+        </div>
+    </nav>
+
+    <main class="page-section container mx-auto px-4">
+        
+        <div class="carousel-container mb-16">
+            <div class="carousel-slides">
+                <div class="carousel-slide">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/ChairInTree10%20testsave.jpg" alt="Atmospheric photo of a chair in a tree with light trails">
+                </div>
+                <div class="carousel-slide">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/PXL_20211115_234318262.jpg" alt="Abstract ceramic sculpture with textured rings">
+                </div>
+                <div class="carousel-slide">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/IMG_0137.JPG" alt="Sculpture of a ladder with a suspended I-beam">
+                </div>
+                <div class="carousel-slide">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/EducationFoundationThumbnail.jpg" alt="Sculpture with books and metal rods">
+                </div>
+                 <div class="carousel-slide">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/PXL_20211124_224930138.jpg" alt="Sculpture with ladder, I-beam, and stone base">
+                </div>
+            </div>
+            <button class="carousel-button carousel-prev">&#10094;</button>
+            <button class="carousel-button carousel-next">&#10095;</button>
+            <div class="carousel-dots"></div>
+        </div>
+
+        <h1 class="oswald-font text-5xl md:text-6xl font-bold text-center mb-12 section-title">Explore My Work</h1>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <a href="exhibitions.html" class="gallery-card rounded-xl block">
+                <img src="https://placehold.co/600x375/ede3df/4c6121?text=Exhibitions" alt="Exhibitions" class="w-full">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Exhibitions</h2>
+                    <p class="text-sm gallery-card-description">Installations, group shows, and solo presentations.</p>
+                </div>
+            </a>
+
+            <a href="sculpture.html" class="gallery-card rounded-xl block">
+                <img src="https://storage.googleapis.com/generativeai-downloads/images/IMG_0137.JPG" alt="Sculpture" class="w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x375/ede3df/ac4500?text=Sculpture';">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Sculpture</h2>
+                    <p class="text-sm gallery-card-description">Exploring form, material, and space in three dimensions.</p>
+                </div>
+            </a>
+
+            <a href="photography.html" class="gallery-card rounded-xl block">
+                <img src="https://storage.googleapis.com/generativeai-downloads/images/ChairInTree10%20testsave.jpg" alt="Photography" class="w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x375/ede3df/4c6121?text=Photography';">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Photography</h2>
+                    <p class="text-sm gallery-card-description">Capturing moments, light, and perspectives through the lens.</p>
+                </div>
+            </a>
+
+            <a href="ceramics.html" class="gallery-card rounded-xl block">
+                <img src="https://storage.googleapis.com/generativeai-downloads/images/PXL_20211115_234318262.jpg" alt="Ceramics" class="w-full" onerror="this.onerror=null;this.src='https://placehold.co/600x375/ede3df/ac4500?text=Ceramics';">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Ceramics</h2>
+                    <p class="text-sm gallery-card-description">Hand-built and wheel-thrown forms in clay.</p>
+                </div>
+            </a>
+
+            <a href="digital.html" class="gallery-card rounded-xl block">
+                <img src="https://placehold.co/600x375/ede3df/4c6121?text=Digital+Art" alt="Digital Art" class="w-full">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Digital Art</h2>
+                    <p class="text-sm gallery-card-description">Creations in the virtual space, from generative art to illustrations.</p>
+                </div>
+            </a>
+
+            <a href="drawing.html" class="gallery-card rounded-xl block">
+                <img src="https://placehold.co/600x375/ede3df/ac4500?text=Drawing" alt="Drawing" class="w-full">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Drawing</h2>
+                    <p class="text-sm gallery-card-description">Sketches, studies, and finished works on paper.</p>
+                </div>
+            </a>
+            
+            <a href="videos.html" class="gallery-card rounded-xl block lg:col-span-1 md:col-span-2 col-span-1"> 
+                <img src="https://placehold.co/600x375/ede3df/4c6121?text=Videos" alt="Videos" class="w-full">
+                <div class="p-6">
+                    <h2 class="oswald-font text-3xl font-semibold mb-2 gallery-card-title">Videos</h2>
+                    <p class="text-sm gallery-card-description">Time-based media, documentation, and video art.</p>
+                </div>
+            </a>
+
+        </div>
+    </main>
+
+    <footer class="py-8 mt-12">
+        <p>Mickey Williamson</p>
+    </footer>
+
+    <script>
+        // --- p5.js Line Flow Sketch ---
+        let freezeNoiseTime = 0;
+        const p5settings = { // Renamed to avoid conflict with carousel settings
+            resolution: 30,      
+            lineLength: 100,      
+            noiseScale: 0.0015,   
+            noiseSpeed: 0.00005, 
+            lineThickness: 3,    
+            backgroundColor: '#ede3df', 
+            freeze: false, 
+            dynamicColor: true, 
+            hueShift: 80,       
+            hueRangeWidth: 200    
+        };
+
+        function setup() {
+            console.log("Gallery Page Background: p5.js setup() called.");
+            const canvasPlaceholder = document.getElementById('p5-canvas-placeholder');
+            if (!canvasPlaceholder) {
+                console.error("Gallery Page Background FATAL: #p5-canvas-placeholder not found!");
+                return;
+            }
+            const c = createCanvas(windowWidth, windowHeight); 
+            c.parent(canvasPlaceholder);
+            console.log("Gallery Page Background: Canvas created and parented.");
+            
+            try {
+                background(p5settings.backgroundColor);
+            } catch (e) {
+                console.error("Gallery Page Background: Error setting initial background in setup():", e);
+            }
+            strokeCap(ROUND);
+            colorMode(HSB, 360, 100, 100, 1); 
+            noiseDetail(3, 0.3); 
+            console.log("Gallery Page Background: p5.js setup() finished.");
+        }
+
+        function draw() {
+            try {
+                 background(p5settings.backgroundColor);
+            } catch (e) {
+                console.error("Gallery Page Background: Error in draw() background call:", e); return;
+            }
+            
+            let noiseZ = p5settings.freeze ? freezeNoiseTime : (freezeNoiseTime = millis() * p5settings.noiseSpeed);
+            strokeWeight(p5settings.lineThickness);
+
+            if (p5settings.resolution <= 0) {
+                if (frameCount === 1) console.warn("Resolution is <= 0, loops will not run correctly.");
+                return; 
+            }
+
+            for (let y = -p5settings.lineLength; y < height + p5settings.lineLength; y += p5settings.resolution) {
+                for (let x = -p5settings.lineLength; x < width + p5settings.lineLength; x += p5settings.resolution) {
+                    let rawNoiseValue = noise(x * p5settings.noiseScale, y * p5settings.noiseScale, noiseZ);
+                    let angle = rawNoiseValue * TWO_PI * 2; 
+
+                    if (p5settings.dynamicColor) {
+                        const halfHueRangeWidth = p5settings.hueRangeWidth / 2;
+                        let hueOffset = map(rawNoiseValue, 0, 1, -halfHueRangeWidth, halfHueRangeWidth);
+                        let finalHue = (p5settings.hueShift + hueOffset + 360) % 360;
+                        stroke(finalHue, 70, 60, 0.6); 
+                    } else {
+                        let baseColor = color('#4c6121'); 
+                        let r = red(baseColor);
+                        let g = green(baseColor);
+                        let b = blue(baseColor);
+                        stroke(r, g, b, 165); 
+                    }
+                    line(x, y, x + cos(angle) * p5settings.lineLength, y + sin(angle) * p5settings.lineLength);
+                }
+            }
+        }
+
+        function windowResized() {
+            console.log("Gallery Page Background: windowResized() called.");
+            resizeCanvas(windowWidth, windowHeight);
+            if (typeof background === 'function' && p5settings && p5settings.backgroundColor) {
+                background(p5settings.backgroundColor); 
+            }
+            console.log("Gallery Page Background: windowResized() finished, canvas: " + width + "x" + height);
+        }
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Carousel JavaScript
+        const slidesContainer = document.querySelector(".carousel-slides");
+        const slides = Array.from(document.querySelectorAll(".carousel-slide"));
+        const prevButton = document.querySelector(".carousel-prev");
+        const nextButton = document.querySelector(".carousel-next");
+        const dotsContainer = document.querySelector(".carousel-dots");
+
+        let currentIndex = 0;
+        let slideInterval;
+
+        function updateDots() {
+            const dots = Array.from(dotsContainer.children);
+            dots.forEach((dot, index) => {
+                dot.classList.toggle("active", index === currentIndex);
+            });
+        }
+
+        function showSlide(index) {
+            slidesContainer.style.transform = `translateX(-${index * 100}%)`;
+            currentIndex = index;
+            updateDots();
+        }
+
+        function nextSlide() {
+            const newIndex = (currentIndex + 1) % slides.length;
+            showSlide(newIndex);
+        }
+
+        function prevSlide() {
+            const newIndex = (currentIndex - 1 + slides.length) % slides.length;
+            showSlide(newIndex);
+        }
+        
+        function createDots() {
+            slides.forEach((_, index) => {
+                const dot = document.createElement("button");
+                dot.classList.add("carousel-dot");
+                dot.addEventListener("click", () => {
+                    showSlide(index);
+                    resetInterval();
+                });
+                dotsContainer.appendChild(dot);
+            });
+        }
+
+        function startInterval() {
+            slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            startInterval();
+        }
+
+        if (slidesContainer && slides.length > 0) {
+            createDots();
+            showSlide(0); // Show the first slide initially
+            startInterval(); // Start autoplay
+
+            nextButton.addEventListener("click", () => {
+                nextSlide();
+                resetInterval();
+            });
+            prevButton.addEventListener("click", () => {
+                prevSlide();
+                resetInterval();
+            });
+            
+            // Optional: Pause on hover
+            const carouselContainer = document.querySelector('.carousel-container');
+            carouselContainer.addEventListener('mouseenter', () => clearInterval(slideInterval));
+            carouselContainer.addEventListener('mouseleave', startInterval);
+
+        } else {
+            console.warn("Carousel elements not found or no slides present.");
+            if(document.querySelector(".carousel-container")) {
+                 document.querySelector(".carousel-container").style.display = 'none'; // Hide carousel if no slides
+            }
+        }
+
+    </script>
+</body>
+</html>

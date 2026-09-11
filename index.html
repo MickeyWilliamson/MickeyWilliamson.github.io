@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mickey Williamson - Artist & Game Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Oswald:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+
+// https://harrytortus.github.io/OrbitalShapes/
+// https://harrytortus.github.io/LineFlow/
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ede3df; /* Main light beige background - matches p5 canvas */
+            color: #4c6121; /* Default text color - Olive Green */
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        #p5-canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1; /* Behind all other content */
+            overflow: hidden;
+        }
+
+        #p5-canvas-container canvas {
+            display: block; /* remove extra space below canvas */
+        }
+
+        .oswald-font {
+            font-family: 'Oswald', sans-serif;
+        }
+
+        /* Navigation styling */
+        nav {
+            background-color: rgba(237, 227, 223, 0.85); /* Semi-transparent version of page bg */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); /* Safari */
+            border-bottom: 1px solid #d1c7c3; /* Subtle border */
+        }
+        nav a.nav-brand {
+            color: #4c6121; /* Olive green for brand */
+        }
+        nav a.nav-link {
+            color: #4c6121; /* Olive Green for nav links */
+            transition: color 0.3s ease;
+        }
+        nav a.nav-link:hover {
+            color: #ac4500; /* Rusty Orange for ALL hover */
+        }
+        /* Removed: nav a.nav-link:nth-child(odd):hover */
+
+
+        /* Button styling */
+        .cta-button-primary {
+            background-color: #4c6121; /* Olive green background */
+            color: #ede3df; /* Light beige text */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .cta-button-primary:hover {
+            background-color: #3b4c1a; /* Darker olive green */
+            transform: translateY(-2px);
+        }
+
+        .cta-button-secondary { /* This class is still defined but no longer used for the hero buttons */
+            background-color: #ac4500; /* Rusty orange background */
+            color: #ede3df; /* Light beige text */
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .cta-button-secondary:hover {
+            background-color: #8a3700; /* Darker rusty orange */
+            transform: translateY(-2px);
+        }
+        
+        /* General Content card styling */
+        .content-card {
+            background: rgba(255, 255, 255, 0.25); /* Default alpha for cards (e.g., hero card) */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px); /* Safari */
+            border: 1px solid rgba(76, 97, 33, 0.2); /* Softer border */
+            box-shadow: 0 8px 25px rgba(76, 97, 33, 0.12); /* Adjusted shadow */
+            color: #4c6121; /* Olive Green text for content inside cards */
+        }
+
+        /* Specific alpha for showcase cards (individual cards within the showcase section) */
+        .showcase-section .content-card {
+            background: rgba(255, 255, 255, 0.25); /* Alpha 0.25 for showcase cards */
+        }
+
+
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative; 
+            z-index: 1;
+        }
+        .hero-section h1 {
+            color: #3b4c1a; /* Darker olive for main heading */
+        }
+        .hero-section .profile-image-container {
+            margin-top: 1.5rem; /* Space between title and photo */
+            margin-bottom: 1rem; /* Space between photo and subtitle */
+        }
+        .hero-section .profile-image {
+            width: 8rem; /* 128px */
+            height: 8rem; /* 128px */
+            border-radius: 9999px; /* Circle */
+            border: 4px solid #ac4500; /* Rusty Orange border */
+            object-fit: cover; /* Ensure image covers the area well */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+         .hero-section .subtitle { /* This is the "Artist | Game Developer | Preparator" tag */
+            color: #ac4500; /* Rusty Orange for subtitle - kept as per previous request */
+        }
+        .hero-section .description {
+            color: #4c6121; /* Olive Green for description */
+        }
+
+
+        .showcase-section {
+            padding: 4rem 2rem;
+            background-color: rgba(245, 240, 237, 0.25); /* #f5f0ed with 25% alpha */
+            backdrop-filter: blur(8px); /* Frosted glass effect for the section background */
+            -webkit-backdrop-filter: blur(8px); /* Safari */
+            position: relative;
+            z-index: 1;
+        }
+        .showcase-section h2 { /* e.g., "A Glimpse of My Work" */
+             color: #3b4c1a; /* Darker Olive Green */
+        }
+        .showcase-item img {
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+        }
+         .showcase-section .content-card h3 { /* e.g., "Ceramic Forms" */
+             color: #4c6121; /* Olive Green */
+        }
+        .showcase-section .content-card p { /* Text under showcase item titles */
+             color: #4c6121; /* Olive Green */
+        }
+
+
+        #about {
+            padding: 4rem 2rem; /* Added padding for consistency with showcase section */
+            background-color: transparent; /* Section background is fully transparent */
+            /* backdrop-filter and -webkit-backdrop-filter removed from here */
+            position: relative;
+            z-index: 1;
+        }
+        #about h2 { /* "About Mickey" */
+            color: #3b4c1a; /* Darker Olive Green */
+        }
+        /* The .content-card within #about will use the general .content-card styles for its background and blur */
+        #about .content-card p { /* Main paragraphs in About section */
+            color: #4c6121; /* Olive Green */
+        }
+        #about .content-card .italic { /* The quote */
+            color: #525f31; /* Slightly lighter olive for quote - kept for subtle variation */
+        }
+        #about img.profile-pic-about { 
+            border-color: #4c6121; /* Olive border for profile pic in About */
+        }
+
+        footer {
+            background-color: #e0d9d5; /* Slightly darker beige for footer - can also be transparent if desired */
+            position: relative;
+            z-index: 1;
+            text-align: center; /* Ensure the text is centered */
+        }
+        footer p {
+            color: #525f31; /* Muted olive text */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="p5-canvas-container">
+        <div id="p5-canvas-placeholder"></div>
+    </div>
+
+    <nav class="fixed top-0 left-0 right-0 p-4 z-50 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="oswald-font text-2xl font-bold nav-brand">MW</a>
+            <div class="space-x-4 text-sm md:text-base">
+                <a href="#home" class="nav-link">Home</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <a href="#games" class="nav-link">Games/Apps</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#shop" class="nav-link">Shop</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-section text-center">
+        <div class="content-card p-8 md:p-12 rounded-xl max-w-3xl mx-auto">
+            <h1 class="oswald-font text-5xl md:text-7xl font-bold mb-0">MICKEY WILLIAMSON</h1>
+            <div class="profile-image-container">
+                <img src="https://storage.googleapis.com/generativeai-downloads/images/MW.jpg" alt="Mickey Williamson" class="profile-image mx-auto" onerror="this.onerror=null;this.src='https://placehold.co/128x128/ede3df/ac4500?text=MW';">
+            </div>
+            <p class="text-xl md:text-2xl mb-2 oswald-font subtitle">Artist | Game Developer | Preparator</p>
+            <p class="mb-8 text-base md:text-lg leading-relaxed description">
+                Exploring the intersection of physical craft and digital creation. From tactile sculptures in steel and ceramic
+                to immersive game experiences, my work seeks to bridge worlds and spark curiosity.
+            </p>
+            <div class="space-y-4 md:space-y-0 md:space-x-4">
+                <a href="gallery.html" class="cta-button-primary font-semibold py-3 px-8 rounded-lg text-lg inline-block">View Gallery</a>
+                <a href="#games" class="cta-button-primary font-semibold py-3 px-8 rounded-lg text-lg inline-block">Explore Games</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="showcase" class="showcase-section"> 
+        <div class="container mx-auto">
+            <h2 class="oswald-font text-4xl font-bold text-center mb-12">A Glimpse of My Work</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="content-card rounded-lg p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/PXL_20211115_234318262.jpg" alt="Ceramic Sculpture Example" class="rounded-md mb-4 w-full h-64 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x600/ede3df/4c6121?text=Ceramic+Art';">
+                    <h3 class="oswald-font text-2xl font-semibold mb-2">Ceramic Forms</h3>
+                    <p class="text-sm">Organic textures and intricate details born from clay and fire.</p>
+                </div>
+                <div class="content-card rounded-lg p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                    <img src="https://storage.googleapis.com/generativeai-downloads/images/IMG_0137.JPG" alt="Steel Sculpture Example" class="rounded-md mb-4 w-full h-64 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x600/ede3df/4c6121?text=Steel+Sculpture';">
+                    <h3 class="oswald-font text-2xl font-semibold mb-2">Material Juxtaposition</h3>
+                    <p class="text-sm">Exploring the dialogue between manufactured structures and natural elements.</p>
+                </div>
+                <div class="content-card rounded-lg p-6 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                     <img src="https://storage.googleapis.com/generativeai-downloads/images/ChairInTree10%20testsave.jpg" alt="Digital Art Example" class="rounded-md mb-4 w-full h-64 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x600/ede3df/4c6121?text=Digital+Art';">
+                    <h3 class="oswald-font text-2xl font-semibold mb-2">Interactive Worlds</h3>
+                    <p class="text-sm">Crafting digital experiences, from generative art to playable games.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <section id="about" class="py-16"> 
+        <div class="container mx-auto px-6 text-center content-card p-8 md:p-12 rounded-xl shadow-2xl max-w-3xl"> <h2 class="oswald-font text-4xl font-bold mb-6">About Mickey</h2>
+            <img src="https://storage.googleapis.com/generativeai-downloads/images/MW.jpg" alt="Mickey Williamson" class="profile-pic-about w-32 h-32 rounded-full mx-auto mb-6 border-4" onerror="this.onerror=null;this.src='https://placehold.co/128x128/ede3df/4c6121?text=MW';">
+            <p class="mb-4 leading-relaxed">
+                Mickey Williamson is an artist and preparator based in Kalamazoo, Michigan. His work started in the digital space with photography and audio production in high school. While at the Frostic School of Art he began creating sculptures using steel and ceramics. After graduating with a BFA he took on a 9 month ceramic residency at the Kirk Newman Art School. Now he is working as a preparator at the Kalamazoo Institute of Arts. Since July 2023 he has been developing games in his free time.
+            </p>
+             <p class="italic">
+                "My life is a blend of physical and digital experiences, finding joy in both consuming online content and creating tangible work."
+            </p>
+        </div>
+    </section>
+
+    <footer class="py-8">
+        <p>Mickey Williamson</p>
+    </footer>
+
+    <script>
+        // --- p5.js Line Flow Sketch (Modified for Background) ---
+        let freezeNoiseTime = 0;
+        const settings = { 
+            resolution: 30,      
+            lineLength: 100,      
+            noiseScale: 0.0015,   
+            noiseSpeed: 0.00005, 
+            lineThickness: 1.5,    
+            backgroundColor: '#ede3df', 
+            freeze: false, 
+            dynamicColor: true, 
+            hueShift: 80,        // Hue of #ac4500 (rusty orange is ~20-30 hue)
+            hueRangeWidth: 200    // Wider range to include oranges, yellows, some reds, and blend towards olive
+        };
+
+        function setup() {
+            console.log("Landing Page Background: p5.js setup() called.");
+            const canvasPlaceholder = document.getElementById('p5-canvas-placeholder');
+            if (!canvasPlaceholder) {
+                console.error("Landing Page Background FATAL: #p5-canvas-placeholder not found!");
+                return;
+            }
+            const c = createCanvas(windowWidth, windowHeight); 
+            c.parent(canvasPlaceholder);
+            console.log("Landing Page Background: Canvas created and parented.");
+            
+            try {
+                background(settings.backgroundColor);
+            } catch (e) {
+                console.error("Landing Page Background: Error setting initial background in setup():", e);
+            }
+            strokeCap(ROUND);
+            colorMode(HSB, 360, 100, 100, 1); // Hue, Sat, Bri, Alpha (0-1)
+            noiseDetail(3, 0.3); 
+            console.log("Landing Page Background: p5.js setup() finished.");
+        }
+
+        function draw() {
+            try {
+                 background(settings.backgroundColor);
+            } catch (e) {
+                console.error("Landing Page Background: Error in draw() background call:", e); return;
+            }
+            
+            let noiseZ = settings.freeze ? freezeNoiseTime : (freezeNoiseTime = millis() * settings.noiseSpeed);
+            strokeWeight(settings.lineThickness);
+
+            if (settings.resolution <= 0) {
+                if (frameCount === 1) console.warn("Resolution is <= 0, loops will not run correctly.");
+                return; 
+            }
+
+            for (let y = -settings.lineLength; y < height + settings.lineLength; y += settings.resolution) {
+                for (let x = -settings.lineLength; x < width + settings.lineLength; x += settings.resolution) {
+                    let rawNoiseValue = noise(x * settings.noiseScale, y * settings.noiseScale, noiseZ);
+                    let angle = rawNoiseValue * TWO_PI * 2; 
+
+                    if (settings.dynamicColor) {
+                        const halfHueRangeWidth = settings.hueRangeWidth / 2;
+                        let hueOffset = map(rawNoiseValue, 0, 1, -halfHueRangeWidth, halfHueRangeWidth);
+                        let finalHue = (settings.hueShift + hueOffset + 360) % 360;
+                        // HSB: Hue, Saturation (adjust for desired vibrancy), Brightness (adjust for visibility), Alpha
+                        stroke(finalHue, 70, 60, 0.6); // Sat 70, Bri 60, Alpha 0.6
+                    } else {
+                        let baseColor = color('#4c6121'); 
+                        let r = red(baseColor);
+                        let g = green(baseColor);
+                        let b = blue(baseColor);
+                        stroke(r, g, b, 165); 
+                    }
+                    line(x, y, x + cos(angle) * settings.lineLength, y + sin(angle) * settings.lineLength);
+                }
+            }
+        }
+
+        function windowResized() {
+            console.log("Landing Page Background: windowResized() called.");
+            resizeCanvas(windowWidth, windowHeight);
+            if (typeof background === 'function' && settings && settings.backgroundColor) {
+                background(settings.backgroundColor); 
+            }
+            console.log("Landing Page Background: windowResized() finished, canvas: " + width + "x" + height);
+        }
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+
+    </script>
+</body>
+</html>
